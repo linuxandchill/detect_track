@@ -49,20 +49,22 @@ frame, person_coords = finder(args, camera, net, CLASSES, COLORS, fps)
 #print(person_coords)
 
 ## 2 => INSTANTIATE A TRACKER & PASS IN COORDINATES#######
-
 tracker = dlib.correlation_tracker()
 tracker.start_track(frame, dlib.rectangle(*person_coords))
 
 while True:
     retval, fr = camera.read()
+
     tracker.update(fr)
     p = tracker.get_position()
+
     point1 = (int(p.left()), int(p.top()))
     point2= (int(p.right()), int(p.bottom()))
-    cv2.rectangle(fr, point1, point2, (0, 0, 255), 3)
+
+    cv2.rectangle(fr, point1, point2, (0, 0, 255), 2)
     print( ">>>COORDS --> [{}, {}] \r".format(point1, point2))
-    cv2.namedWindow("TRACKED", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("TRACKED", 800,800)
+
+    cv2.namedWindow("TRACKED", cv2.WINDOW_AUTOSIZE)
     cv2.imshow("TRACKED", fr)
 
     # if the `q` key was pressed, break from the loop
