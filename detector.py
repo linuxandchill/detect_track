@@ -1,11 +1,13 @@
 import numpy as np
 import imutils
 import cv2
+import Person
 #from collections import deque
 
+people = []
 def finder(args, camera, net, CLASSES, COLORS, fps):
-    # loop over the frames from the video stream
     while True:
+    # loop over the frames from the video stream
         #resize frame captured from thread
         grabbed, frame = camera.read()
 
@@ -44,6 +46,12 @@ def finder(args, camera, net, CLASSES, COLORS, fps):
 
                 topLeft = (startX, startY)
                 bottomRight = (endX, endY)
+                
+                people.append([topLeft, bottomRight])
+                
+                #first person detected
+                first_person = Person.Person(people[0][0], people[0][1])
+                #print(first_person.tl, first_person.br)
 
                 #center coordinates as a tuple
                 #center_coords = ( int( (topLeft[0] + bottomRight[0])/2), 
@@ -51,15 +59,15 @@ def finder(args, camera, net, CLASSES, COLORS, fps):
 
 
                 # draw the prediction on the frame
-                label = "{}: {:.2f}%".format(CLASSES[idx],
+                label = "{}: {:.2f}%".format(CLASSES,
                         confidence * 100)
                 cv2.rectangle(frame, (startX, startY), (endX, endY),
-                        COLORS[idx], 2)
+                        (0,255,0), 2)
                 #cv2.circle(frame, (center_coords[0], center_coords[1]), 10, (255,0,255), 8)
 
                 y = startY - 15 if startY - 15 > 15 else startY + 15
                 cv2.putText(frame, label, (startX, y),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
 
         # show the output frame
         cv2.imshow("Frame", frame)
@@ -71,3 +79,6 @@ def finder(args, camera, net, CLASSES, COLORS, fps):
 
         # update the FPS counter
         fps.update()
+    return frame, [first_person.tl[0], first_person.tl[1], 
+            first_person.br[0], first_person.br[1]]
+

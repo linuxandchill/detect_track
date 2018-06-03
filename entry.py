@@ -7,6 +7,8 @@ import time
 import cv2
 from collections import deque
 from detector import finder
+#from CorrelationTracker import Tracker
+import dlib
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -26,7 +28,6 @@ args = vars(ap.parse_args())
 CLASSES = "person"
 COLORS = (0,255,0) 
 
-
 # load our serialized model from disk
 print("[INFO] loading model...")
 net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
@@ -43,10 +44,32 @@ print("[INFO] starting video stream...")
 time.sleep(2.0)
 fps = FPS().start()
 
-## 1 => DETECTOR ###########################
-finder(args, camera, net, CLASSES, COLORS, fps)
-## 2 => CREATE PERSON INSTANCE W FIRST DETECTED PERSON #################
-## 3 => BEGIN TRACKING PERSON INSTANCE#######
+## 1 => DETECTOR #########
+frame, person_coords = finder(args, camera, net, CLASSES, COLORS, fps)
+#print(person_coords)
+
+## 2 => INSTANTIATE A TRACKER & PASS IN COORDINATES#######
+
+tracker = dlib.correlation_tracker()
+tracker.start_track(frame, dlib.rectangle(*person_coords))
+
+while True:
+    retval, fr = camera.read()
+    tracker.update(fr)
+    p = tracker.get_position()
+    point1 = (int(p.left()), int(p.top()))
+    point2= (int(p.right()), int(p.bottom()))
+    cv2.rectangle(fr, point1, point2, (0, 0, 255), 3)
+    print( ">>>COORDS --> [{}, {}] \r".format(point1, point2))
+    cv2.namedWindow("TRACKED", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("TRACKED", 800,800)
+    cv2.imshow("TRACKED", fr)
+
+    # if the `q` key was pressed, break from the loop
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord("q"):
+            break
+
 
 # stop the timer and display FPS information
 fps.stop()
