@@ -45,13 +45,16 @@ def finder(args, camera, net, CLASSES, COLORS, fps):
                 box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
 
+                height = abs(endY - startY)
+                width = abs(endX - startX)
+                print(height, width)
                 topLeft = (startX, startY)
                 bottomRight = (endX, endY)
                 
-                new = False
+                new = True
                 for p in people:
                     #close to old object
-                    if abs(topLeft[0]-p.tl[0])<=w and abs(topLeft[1]-p.tl[1])<=h: 
+                    if abs(topLeft[0]-p.tl[0])<=width and abs(topLeft[1]-p.tl[1])<=height: 
                         new = False
                         p.updateCoords(topLeft, bottomRight)
                         break
@@ -64,9 +67,8 @@ def finder(args, camera, net, CLASSES, COLORS, fps):
                     new_person = Person.Person(topLeft, bottomRight, id)
                     people.append(new_person)
                     id += 1
+                    first_person_tl, first_person_br = people[0].tl, people[0].br #ret (x1,y1), (x2,y2)
                 
-                #first person detected
-                first_person_tl, first_person_br = people[0].tl, people[0].br #ret (x1,y1), (x2,y2)
                 print("FIRST PERSON {}, {}, ID: {}".format(first_person_tl, first_person_br, people[0].id))
 
                 # draw the prediction on the frame
